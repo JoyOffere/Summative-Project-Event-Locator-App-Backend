@@ -1,0 +1,62 @@
+{
+    "welcome": "Bienvenido a la Aplicación de Localizador de Eventos",
+    "common": {
+      "success": "Éxito",
+      "error": "Error",
+      "notFound": "No encontrado",
+      "unauthorized": "Acceso no autorizado",
+      "invalidInput": "Entrada inválida"
+    },
+    "events": {
+      "create": "Crear Evento",
+      "update": "Actualizar Evento",
+      "delete": "Eliminar Evento",
+      "notFound": "Evento no encontrado",
+      "unauthorized": "No autorizado para realizar esta acción",
+      "eventCreated": "Evento creado con éxito",
+      "eventUpdated": "Evento actualizado con éxito",
+      "eventDeleted": "Evento eliminado con éxito",
+      "addedToFavorites": "Añadido a favoritos",
+      "removedFromFavorites": "Eliminado de favoritos",
+      "ratingAdded": "Calificación añadida con éxito"
+    },
+    "user": {
+      "register": "Registrar Usuario",
+      "login": "Iniciar Sesión",
+      "logout": "Cerrar Sesión",
+      "updateProfile": "Actualizar Perfil",
+      "unauthorized": "No autorizado, por favor inicie sesión",
+      "userExists": "El usuario ya existe",
+      "invalidCredentials": "Correo electrónico o contraseña inválidos",
+      "profileUpdated": "Perfil actualizado con éxito"
+    },
+    "categories": {
+      "music": "Música",
+      "sports": "Deportes",
+      "technology": "Tecnología",
+      "food": "Comida y Bebidas",
+      "arts": "Arte y Cultura",
+      "outdoors": "Aire Libre y Aventura",
+      "social": "Social",
+      "business": "Negocios y Profesional",
+      "health": "Salud y Bienestar",
+      "education": "Educación"
+    },
+    "notifications": {
+      "newEvent": "Nuevo Evento: {{title}}",
+      "upcomingEvent": "Recordatorio: ¡{{title}} está por comenzar!",
+      "notificationSent": "Notificación enviada con éxito"
+    },
+    "errors": {
+      "general": "Algo salió mal",
+      "validation": "Error de validación",
+      "notFound": "Recurso no encontrado",
+      "serverError": "Error interno del servidor"
+    },
+    "search": {
+      "noResults": "No se encontraron eventos",
+      "locationBased": "Eventos cerca de ti",
+      "categoryFilter": "Filtrar por categoría",
+      "searchResults": "Resultados de búsqueda"
+    }
+  }
