@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/db'); // Assuming db.js exports the Sequelize instance
+const sequelize = require('../config/database'); // Assuming db.js exports the Sequelize instance
 
 class Category extends Model {}
 

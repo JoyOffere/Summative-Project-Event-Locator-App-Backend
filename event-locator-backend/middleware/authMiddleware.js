@@ -1,28 +1,27 @@
 const jwt = require('jsonwebtoken');
-const User = require('./models/userModel');
+const db = require('../config/database');
 
 const protect = async (req, res, next) => {
   let token;
 
-  // Check for token in headers
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  if (req.headers.authorization?.startsWith('Bearer')) {
     try {
-      // Get token from header
       token = req.headers.authorization.split(' ')[1];
-
-      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // Set user in request
-      req.user = await User.findById(decoded.id).select('-password');
-
+      
+      // Use Sequelize's findByPk method
+      req.user = await db.User.findByPkAndExcludePassword(decoded.id);
+      
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
       next();
     } catch (error) {
+      console.error('Authentication error:', error);
       res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401).json({ message: 'Not authorized, no token' });
   }
 };

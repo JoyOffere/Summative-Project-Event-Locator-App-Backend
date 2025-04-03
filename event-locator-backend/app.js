@@ -1,33 +1,94 @@
+
+// require('dotenv').config();
+// const express = require('express');
+// const { sequelize } = require('./config/database');
+// const userRoutes = require('./routes/userRoutes');
+// const eventRoutes = require('./routes/eventRoutes');
+// const searchRoutes = require('./routes/searchRoutes');
+// const notificationService = require('./services/notificationService');
+
+// const app = express();
+
+// app.use(express.json());
+
+
+// app.use('/api/users', userRoutes);
+// app.use('/api/events', eventRoutes);
+// app.use('/api/search', searchRoutes);
+
+
+// app.use((err, req, res, next) => {
+//   res.status(err.status || 500).json({
+//     error: {
+//       message: err.message
+//     }
+//   });
+// });
+
+// const PORT = process.env.PORT || 5000;
+
+// async function startServer() {
+//   try {
+//     await sequelize.authenticate();
+//     await sequelize.sync();
+//     await notificationService.startListening();
+//     console.log('Database connected successfully');
+    
+//     app.listen(PORT, () => {
+//       console.log(`Server running on port ${PORT}`);
+//     });
+//   } catch (error) {
+//     console.error('Unable to connect to the database:', error);
+//   }
+// }
+
+// startServer();
+
+
+require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const i18next = require('i18next');
-const i18nextMiddleware = require('i18next-http-middleware');
+const { sequelize } = require('./config/database');
+const userRoutes = require('./routes/userRoutes');
+const eventRoutes = require('./routes/eventRoutes');
+const searchRoutes = require('./routes/searchRoutes');
+const notificationService = require('./services/notificationService');
 
-// Load environment variables
-dotenv.config();
-
-// Initialize express
 const app = express();
 
-// Middleware
-app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Initialize routes
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/events', require('./routes/eventRoutes'));
-app.use('/api/categories', require('./routes/categoryRoutes'));
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/search', searchRoutes);
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  res.status(statusCode).json({
-    status: 'error',
-    statusCode,
-    message: err.message
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message
+    }
   });
 });
 
-module.exports = app;
+const PORT = process.env.PORT || 5000;
+
+async function startServer() {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    
+    // Start notification service (will work in mock mode)
+    await notificationService.startListening();
+    
+    console.log('✅ Database connected successfully');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
