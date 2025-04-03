@@ -19,7 +19,6 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: false
     },
-    // Consistent with Event model approach
     latitude: {
       type: DataTypes.FLOAT,
       allowNull: true,

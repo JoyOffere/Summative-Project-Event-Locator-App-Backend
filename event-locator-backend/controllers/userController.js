@@ -1,4 +1,3 @@
-// controllers/userController.js
 const userService = require('../services/userService');
 const jwt = require('jsonwebtoken');
 
@@ -40,6 +39,16 @@ class UserController {
     }
   }
 
+  // In userController.js
+async getProfile(req, res, next) {
+    try {
+      const user = await userService.getProfile(req.user.id);
+      res.json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async updateProfile(req, res, next) {
     try {
       const user = await userService.updateProfile(req.user.id, req.body);
@@ -47,8 +56,8 @@ class UserController {
         user: { 
           id: user.id,
           email: user.email,
-          locationLatitude: user.locationLatitude,
-          locationLongitude: user.locationLongitude,
+          latitude: user.latitude,
+          longitude: user.longitude,
           preferredCategories: user.preferredCategories,
           preferredLanguage: user.preferredLanguage
         }

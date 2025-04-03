@@ -1,10 +1,9 @@
-// services/userService.js
 const { User } = require('../config/database');
 const createError = require('http-errors');
 
 class UserService {
   async register(userData) {
-    const { email, password, locationLatitude, locationLongitude, preferredCategories } = userData;
+    const { email, password, latitude, longitude, preferredCategories } = userData;
     
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
@@ -14,8 +13,8 @@ class UserService {
     return await User.create({
       email,
       password,
-      locationLatitude,
-      locationLongitude,
+      latitude,
+      longitude,
       preferredCategories
     });
   }
@@ -34,8 +33,23 @@ class UserService {
     return user;
   }
 
+  async getProfile(userId) {
+    const user = await User.findByPk(userId, {
+      attributes: { 
+        exclude: ['password'],
+        include: ['id', 'email', 'latitude', 'longitude', 'preferredCategories', 'preferredLanguage']
+      }
+    });
+    
+    if (!user) {
+      throw createError(404, 'User not found');
+    }
+
+    return user;
+  }
+
   async updateProfile(userId, updateData) {
-    const allowedUpdates = ['locationLatitude', 'locationLongitude', 'preferredCategories', 'preferredLanguage'];
+    const allowedUpdates = ['latitude', 'longitude', 'preferredCategories', 'preferredLanguage'];
     const updates = Object.keys(updateData)
       .filter(key => allowedUpdates.includes(key))
       .reduce((obj, key) => {
@@ -52,7 +66,7 @@ class UserService {
       throw createError(404, 'User not found');
     }
 
-    return await User.findByPk(userId);
+    return await this.getProfile(userId);
   }
 }
 
