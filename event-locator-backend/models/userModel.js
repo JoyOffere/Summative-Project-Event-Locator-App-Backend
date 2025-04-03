@@ -1,69 +1,53 @@
-const mongoose = require('mongoose');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Assuming db.js exports the Sequelize instance
 const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema({
+class User extends Model {
+  // Method to compare passwords
+  async matchPassword(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+  }
+}
+
+User.init({
   username: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    trim: true
   },
   email: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
-    trim: true,
-    lowercase: true
+    lowercase: true,
   },
   password: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],  // [longitude, latitude]
-      required: true
-    }
+    type: DataTypes.GEOMETRY('POINT'), // PostGIS geometry type
+    allowNull: false,
   },
-  preferredCategories: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category'
-  }],
+  preferredCategories: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER), // Assuming category IDs are integers
+  },
   preferredLanguage: {
-    type: String,
-    default: 'en'
+    type: DataTypes.STRING,
+    defaultValue: 'en',
   }
 }, {
-  timestamps: true
+  sequelize,
+  modelName: 'User',
+  timestamps: true,
 });
-
-// Index for geospatial queries
-userSchema.index({ location: '2dsphere' });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
-  
-  try {
+User.beforeSave(async (user) => {
+  if (user.changed('password')) {
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+    user.password = await bcrypt.hash(user.password, salt);
   }
 });
 
-// Method to compare passwords
-userSchema.methods.matchPassword = async function(enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-const User = mongoose.model('User', userSchema);
 module.exports = User;

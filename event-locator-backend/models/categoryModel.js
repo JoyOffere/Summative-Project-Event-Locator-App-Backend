@@ -1,18 +1,17 @@
-const mongoose = require('mongoose');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Assuming db.js exports the Sequelize instance
 
-const categorySchema = new mongoose.Schema({
+class Category extends Model {}
+
+Category.init({
   name: {
-    en: {
-      type: String,
-      required: true
-    },
-    es: String,
-    fr: String,
-    // Add more languages as needed
+    type: DataTypes.JSONB, // Store names in multiple languages as JSON
+    allowNull: false,
   }
 }, {
-  timestamps: true
+  sequelize,
+  modelName: 'Category',
+  timestamps: true,
 });
 
-const Category = mongoose.model('Category', categorySchema);
 module.exports = Category;

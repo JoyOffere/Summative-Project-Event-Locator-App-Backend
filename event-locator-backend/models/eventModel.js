@@ -1,66 +1,43 @@
-const mongoose = require('mongoose');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/db'); // Assuming db.js exports the Sequelize instance
 
-const eventSchema = new mongoose.Schema({
+class Event extends Model {}
+
+Event.init({
   title: {
-    type: String,
-    required: true,
-    trim: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   description: {
-    type: String,
-    required: true
+    type: DataTypes.STRING,
+    allowNull: false,
   },
   location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],  // [longitude, latitude]
-      required: true
-    }
+    type: DataTypes.GEOMETRY('POINT'), // PostGIS geometry type
+    allowNull: false,
   },
   date: {
-    type: Date,
-    required: true
+    type: DataTypes.DATE,
+    allowNull: false,
   },
-  categories: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    required: true
-  }],
+  categories: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER), // Assuming category IDs are integers
+    allowNull: false,
+  },
   createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    type: DataTypes.INTEGER, // Assuming user IDs are integers
+    allowNull: false,
   },
-  ratings: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5
-    },
-    review: String,
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  favorites: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }]
+  ratings: {
+    type: DataTypes.JSONB, // Store ratings as JSON
+  },
+  favorites: {
+    type: DataTypes.ARRAY(DataTypes.INTEGER), // Assuming user IDs are integers
+  }
 }, {
-  timestamps: true
+  sequelize,
+  modelName: 'Event',
+  timestamps: true,
 });
 
-// Index for geospatial queries
-eventSchema.index({ location: '2dsphere' });
-
-const Event = mongoose.model('Event', eventSchema);
 module.exports = Event;

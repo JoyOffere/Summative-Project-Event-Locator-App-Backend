@@ -1,12 +1,13 @@
-const mongoose = require('mongoose');
+const { Client } = require('pg');
 
 const connectDB = async () => {
+  const client = new Client({
+    connectionString: process.env.POSTGRES_URI,
+  });
+
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    await client.connect();
+    console.log('PostgreSQL Connected');
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exit(1);
