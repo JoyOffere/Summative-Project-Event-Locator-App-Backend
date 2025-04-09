@@ -1,60 +1,52 @@
 import React, { useCallback, useEffect, useState } from "react";
 import api from "../services/api";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 function EventList() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [searchRadius, setSearchRadius] = useState(5000); // 5km default
+    const [searchRadius, setSearchRadius] = useState(5000);
     const [retryCount, setRetryCount] = useState(0);
+    const { t, i18n } = useTranslation();
 
-    // Define fetchEvents using useCallback to prevent infinite loop
     const fetchEvents = useCallback(async () => {
         setLoading(true);
         setError('');
-
         try {
-            // Add a small delay to avoid rapid refetching
             await new Promise(resolve => setTimeout(resolve, 500));
-
-            const response = await api.get(`/events/nearby?radius=${searchRadius}`);
-            setEvents(response.data);
-            setRetryCount(0); // Reset retry count on success
+            const response = await api.get(`/events/nearby?radius=${searchRadius}`, {
+                headers: { 'Accept-Language': i18n.language },
+            });
+            setEvents(response.data.events || response.data);
+            setRetryCount(0);
         } catch (err) {
             console.error('Error fetching events:', err.response?.data || err.message);
-
             if (retryCount < 3) {
-                // Auto-retry a few times for network errors
                 setRetryCount(prev => prev + 1);
             } else {
-                // After max retries, show error to user
-                setError(
-                    err.response?.data?.error ||
-                    'Could not connect to server. Please try again later.'
-                );
+                setError(err.response?.data?.error || t('server_error'));
             }
         } finally {
             setLoading(false);
         }
-    }, [searchRadius, retryCount]);
+    }, [searchRadius, retryCount, i18n.language, t]);
 
     useEffect(() => {
         fetchEvents();
     }, [fetchEvents]);
 
     const formatLocation = (locationText) => {
-        // Parse POINT(lon lat) format
         if (locationText) {
             const match = locationText.match(/POINT\(([^ ]+) ([^)]+)\)/);
             if (match) {
-                return `${match[2]}, ${match[1]}`; // lat, lon format
+                return `${match[2]}, ${match[1]}`;
             }
         }
-        return 'Unknown location';
+        return t('unknown_location');
     };
 
-    // Handle radius change with a separate function to prevent immediate trigger
     const handleRadiusChange = (e) => {
         setSearchRadius(e.target.value);
     };
@@ -62,10 +54,10 @@ function EventList() {
     return (
         <div className="event-list">
             <div className="list-header">
-                <h2>Nearby Events</h2>
+                <h2>{t('nearby_events')}</h2>
                 <div className="search-controls">
                     <label>
-                        Search Radius (meters):
+                        {t('search_radius')}:
                         <input
                             type="number"
                             value={searchRadius}
@@ -74,43 +66,50 @@ function EventList() {
                             step="100"
                         />
                     </label>
-                    <button onClick={() => fetchEvents()} className="btn btn-secondary">Refresh</button>
+                    <button onClick={() => fetchEvents()} className="btn btn-secondary">
+                        {t('refresh')}
+                    </button>
                 </div>
-                <Link to="/events/new" className="btn btn-primary">Create New Event</Link>
+                <Link to="/events/new" className="btn btn-primary">
+                    {t('create_new_event')}
+                </Link>
             </div>
-
             {error && (
                 <div className="error">
                     {error}
                     <button
-                        onClick={() => { setRetryCount(0); fetchEvents(); }}
+                        onClick={() => {
+                            setRetryCount(0);
+                            fetchEvents();
+                        }}
                         className="btn btn-secondary retry-btn"
                     >
-                        Retry
+                        {t('retry')}
                     </button>
                 </div>
             )}
-
             {loading ? (
-                <div className="loading">Loading events...</div>
+                <div className="loading">{t('loading_events')}</div>
             ) : events.length > 0 ? (
                 <div className="events-grid">
-                    {events.map((event) => (
+                    {events.map(event => (
                         <div key={event.id} className="event-card">
                             <h3>{event.title}</h3>
-                            <p className="event-date">{new Date(event.date).toLocaleString()}</p>
+                            <p className="event-date">{new Date(event.date).toLocaleString(i18n.language)}</p>
                             <p className="event-location">{formatLocation(event.location)}</p>
                             <p className="event-description">
                                 {event.description && event.description.length > 100
                                     ? `${event.description.substring(0, 100)}...`
-                                    : event.description || 'No description available'}
+                                    : event.description || t('no_description')}
                             </p>
-                            <Link to={`/events/${event.id}`} className="btn btn-secondary">View Details</Link>
+                            <Link to={`/events/${event.id}`} className="btn btn-secondary">
+                                {t('view_details')}
+                            </Link>
                         </div>
                     ))}
                 </div>
             ) : (
-                <div className="no-events">No events found in your area. Try increasing the search radius.</div>
+                <div className="no-events">{t('no_events_in_area')}</div>
             )}
         </div>
     );

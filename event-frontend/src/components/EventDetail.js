@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 function EventDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -16,22 +18,26 @@ function EventDetail() {
 
     const fetchEvent = async () => {
         try {
-            const response = await api.get(`/events/${id}`);
-            setEvent(response.data);
+            const response = await api.get(`/events/${id}`, {
+                headers: { 'Accept-Language': i18n.language },
+            });
+            setEvent(response.data.event || response.data);
         } catch (err) {
-            setError('Failed to fetch event details');
+            setError(t('failed_to_fetch_event'));
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this event?')) {
+        if (window.confirm(t('confirm_delete'))) {
             try {
-                await api.delete(`/events/${id}`);
+                await api.delete(`/events/${id}`, {
+                    headers: { 'Accept-Language': i18n.language },
+                });
                 navigate('/events');
             } catch (err) {
-                setError('Failed to delete event');
+                setError(t('failed_to_delete_event'));
             }
         }
     };
@@ -43,11 +49,11 @@ function EventDetail() {
                 return `${match[2]}, ${match[1]}`; // lat, lon format
             }
         }
-        return 'Unknown location';
+        return t('unknown_location');
     };
 
     if (loading) {
-        return <div className="loading">Loading event details...</div>;
+        return <div className="loading">{t('loading_event_details')}</div>;
     }
 
     if (error) {
@@ -55,39 +61,35 @@ function EventDetail() {
     }
 
     if (!event) {
-        return <div className="not-found">Event not found</div>;
+        return <div className="not-found">{t('event_not_found')}</div>;
     }
 
     return (
         <div className="event-detail">
             <h2>{event.title}</h2>
-
             <div className="event-meta">
                 <div className="meta-item">
-                    <span className="meta-label">Date & Time:</span>
-                    <span className="meta-value">{new Date(event.date).toLocaleString()}</span>
+                    <span className="meta-label">{t('date_time')}:</span>
+                    <span className="meta-value">{new Date(event.date).toLocaleString(i18n.language)}</span>
                 </div>
-
                 <div className="meta-item">
-                    <span className="meta-label">Location:</span>
+                    <span className="meta-label">{t('location')}:</span>
                     <span className="meta-value">{formatLocation(event.location)}</span>
                 </div>
             </div>
-
             <div className="event-description">
-                <h3>Description</h3>
+                <h3>{t('description')}</h3>
                 <p>{event.description}</p>
             </div>
-
             <div className="event-actions">
                 <button onClick={() => navigate('/events')} className="btn btn-secondary">
-                    Back to Events
+                    {t('back_to_events')}
                 </button>
                 <button onClick={() => navigate(`/events/${id}/edit`)} className="btn btn-primary">
-                    Edit Event
+                    {t('edit_event')}
                 </button>
                 <button onClick={handleDelete} className="btn btn-danger">
-                    Delete Event
+                    {t('delete_event')}
                 </button>
             </div>
         </div>

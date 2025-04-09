@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 function EventForm() {
     const { id } = useParams();
     const isEditing = Boolean(id);
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         date: '',
         latitude: '',
-        longitude: ''
+        longitude: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(isEditing);
@@ -21,17 +23,16 @@ function EventForm() {
         if (isEditing) {
             fetchEvent();
         } else {
-            // For new events, get user's current location as default
             handleGetLocation();
         }
     }, [id]);
 
     const fetchEvent = async () => {
         try {
-            const response = await api.get(`/events/${id}`);
-            const event = response.data;
-
-            // Parse location from POINT(lon lat) format
+            const response = await api.get(`/events/${id}`, {
+                headers: { 'Accept-Language': i18n.language },
+            });
+            const event = response.data.event || response.data;
             let latitude = '';
             let longitude = '';
             if (event.location) {
@@ -41,20 +42,16 @@ function EventForm() {
                     latitude = match[2];
                 }
             }
-
-            // Format date for datetime-local input (YYYY-MM-DDThh:mm)
-            const date = new Date(event.date);
-            const formattedDate = date.toISOString().slice(0, 16);
-
+            const date = new Date(event.date).toISOString().slice(0, 16);
             setFormData({
                 title: event.title,
                 description: event.description,
-                date: formattedDate,
+                date,
                 latitude,
-                longitude
+                longitude,
             });
         } catch (err) {
-            setError('Failed to fetch event details');
+            setError(t('failed_to_fetch_event'));
         } finally {
             setLoading(false);
         }
@@ -67,63 +64,60 @@ function EventForm() {
                     setFormData(prev => ({
                         ...prev,
                         latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
+                        longitude: position.coords.longitude,
                     }));
                 },
                 (error) => {
-                    setError(`Geolocation error: ${error.message}`);
+                    setError(t('geolocation_error', { message: error.message }));
                 }
             );
         } else {
-            setError('Geolocation is not supported by this browser');
+            setError(t('geolocation_not_supported'));
         }
     };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
         try {
             const eventData = {
                 title: formData.title,
                 description: formData.description,
                 date: new Date(formData.date).toISOString(),
                 latitude: parseFloat(formData.latitude),
-                longitude: parseFloat(formData.longitude)
+                longitude: parseFloat(formData.longitude),
             };
-
             if (isEditing) {
-                await api.put(`/events/${id}`, eventData);
+                await api.put(`/events/${id}`, eventData, {
+                    headers: { 'Accept-Language': i18n.language },
+                });
             } else {
-                await api.post('/events', eventData);
+                await api.post('/events', eventData, {
+                    headers: { 'Accept-Language': i18n.language },
+                });
             }
-
             navigate('/events');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to save event');
+            setError(err.response?.data?.error || t('failed_to_save_event'));
         }
     };
 
     if (loading) {
-        return <div className="loading">Loading event details...</div>;
+        return <div className="loading">{t('loading_event_details')}</div>;
     }
 
     return (
         <div className="event-form">
-            <h2>{isEditing ? 'Edit Event' : 'Create New Event'}</h2>
+            <h2>{isEditing ? t('edit_event') : t('create_event')}</h2>
             {error && <div className="error">{error}</div>}
-
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label>Title</label>
+                    <label>{t('title')}</label>
                     <input
                         type="text"
                         name="title"
@@ -132,9 +126,8 @@ function EventForm() {
                         required
                     />
                 </div>
-
                 <div className="form-group">
-                    <label>Description</label>
+                    <label>{t('description')}</label>
                     <textarea
                         name="description"
                         value={formData.description}
@@ -143,9 +136,8 @@ function EventForm() {
                         required
                     />
                 </div>
-
                 <div className="form-group">
-                    <label>Date & Time</label>
+                    <label>{t('date_time')}</label>
                     <input
                         type="datetime-local"
                         name="date"
@@ -154,15 +146,14 @@ function EventForm() {
                         required
                     />
                 </div>
-
                 <div className="form-group">
-                    <label>Location</label>
+                    <label>{t('location')}</label>
                     <div className="location-input">
                         <div>
                             <input
                                 type="number"
                                 name="latitude"
-                                placeholder="Latitude"
+                                placeholder={t('latitude')}
                                 value={formData.latitude}
                                 onChange={handleChange}
                                 step="any"
@@ -171,7 +162,7 @@ function EventForm() {
                             <input
                                 type="number"
                                 name="longitude"
-                                placeholder="Longitude"
+                                placeholder={t('longitude')}
                                 value={formData.longitude}
                                 onChange={handleChange}
                                 step="any"
@@ -179,17 +170,16 @@ function EventForm() {
                             />
                         </div>
                         <button type="button" onClick={handleGetLocation} className="btn btn-secondary">
-                            Get Current Location
+                            {t('get_current_location')}
                         </button>
                     </div>
                 </div>
-
                 <div className="form-actions">
                     <button type="button" onClick={() => navigate('/events')} className="btn btn-secondary">
-                        Cancel
+                        {t('cancel')}
                     </button>
                     <button type="submit" className="btn btn-primary">
-                        {isEditing ? 'Update Event' : 'Create Event'}
+                        {isEditing ? t('update_event') : t('create_event')}
                     </button>
                 </div>
             </form>

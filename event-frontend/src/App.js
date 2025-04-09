@@ -7,12 +7,14 @@ import Navbar from "./components/Navbar";
 import Notification from "./components/Notification";
 import React, { useEffect, useState } from "react";
 import Register from "./components/Register";
+import { useTranslation } from "react-i18next";
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
 
-// App.js
+// src/App.js
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { t, i18n } = useTranslation();
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -26,12 +28,23 @@ function App() {
         setIsAuthenticated(false);
     };
 
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+    };
+
     return (
         <Router>
             <div className="app">
                 <Navbar isAuthenticated={isAuthenticated} logout={logout} />
-                {isAuthenticated && <Notification />} {/* Only show notifications when authenticated */}
+                <div className="language-switcher">
+                    <select onChange={(e) => changeLanguage(e.target.value)} defaultValue={i18n.language}>
+                        <option value="en">English</option>
+                        <option value="fr">French</option>
+                    </select>
+                </div>
+                {isAuthenticated && <Notification />}
                 <div className="container">
+                    <h1>{t('welcome')}</h1>
                     <Routes>
                         <Route
                             path="/login"

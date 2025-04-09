@@ -1,17 +1,16 @@
 import "./Notification.css";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { io } from "socket.io-client";
 
 function Notification() {
     const [notifications, setNotifications] = useState([]);
     const [socket, setSocket] = useState(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
-        // Create socket connection
         const newSocket = io('http://localhost:3000');
         setSocket(newSocket);
-
-        // Clean up on unmount
         return () => {
             newSocket.disconnect();
         };
@@ -19,19 +18,13 @@ function Notification() {
 
     useEffect(() => {
         if (!socket) return;
-
-        // Listen for notifications
-        socket.on('notification', (message) => {
-            // Add new notification with a unique ID
+        socket.on('notification', message => {
             const newNotification = {
                 id: Date.now(),
                 message,
-                isNew: true
+                isNew: true,
             };
-
             setNotifications(prev => [newNotification, ...prev]);
-
-            // After 5 seconds, mark as not new (for animation)
             setTimeout(() => {
                 setNotifications(prev =>
                     prev.map(notif =>
@@ -40,26 +33,24 @@ function Notification() {
                 );
             }, 5000);
         });
-
         return () => {
             socket.off('notification');
         };
     }, [socket]);
 
-    const dismissNotification = (id) => {
+    const dismissNotification = id => {
         setNotifications(prev => prev.filter(notif => notif.id !== id));
     };
 
     return (
         <div className="notification-container">
-            {notifications.map((notification) => (
+            <h3>{t('notifications')}</h3>
+            {notifications.map(notification => (
                 <div
                     key={notification.id}
                     className={`notification-item ${notification.isNew ? 'new' : ''}`}
                 >
-                    <div className="notification-content">
-                        {notification.message}
-                    </div>
+                    <div className="notification-content">{notification.message}</div>
                     <button
                         className="notification-dismiss"
                         onClick={() => dismissNotification(notification.id)}

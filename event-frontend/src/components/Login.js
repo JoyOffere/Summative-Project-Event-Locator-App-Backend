@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "../services/api";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 function Login({ setIsAuthenticated }) {
@@ -7,48 +8,52 @@ function Login({ setIsAuthenticated }) {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
         try {
-            const response = await api.post('/login', { username, password });
+            const response = await api.post('/login', { username, password }, {
+                headers: { 'Accept-Language': i18n.language },
+            });
             localStorage.setItem('token', response.data.token);
             setIsAuthenticated(true);
             navigate('/events');
         } catch (err) {
-            setError(err.response?.data?.error || 'Login failed');
+            setError(err.response?.data?.error || t('login_failed'));
         }
     };
 
     return (
         <div className="auth-form">
-            <h2>Login</h2>
+            <h2>{t('login')}</h2>
             {error && <div className="error">{error}</div>}
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label>Username</label>
+                    <label>{t('username')}</label>
                     <input
                         type="text"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={e => setUsername(e.target.value)}
                         required
                     />
                 </div>
                 <div className="form-group">
-                    <label>Password</label>
+                    <label>{t('password')}</label>
                     <input
                         type="password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={e => setPassword(e.target.value)}
                         required
                     />
                 </div>
-                <button type="submit" className="btn btn-primary">Login</button>
+                <button type="submit" className="btn btn-primary">
+                    {t('login')}
+                </button>
             </form>
             <p>
-                Don't have an account? <a href="/register">Register</a>
+                {t('no_account')} <a href="/register">{t('register')}</a>
             </p>
         </div>
     );
